@@ -1,4 +1,4 @@
-try {const pcsclite = require("@pokusew/pcsclite");
+const pcsclite = require("@pokusew/pcsclite");
 const { deferred } = require("promise-callbacks");
 const util = require("./util");
 
@@ -50,6 +50,8 @@ let currentReader;
 
 pcsc.on("reader", (reader) => {
   currentReader = reader;
+  
+  console.log("Initializing...");
 
   reader.on("status", async (status) => {
     const changes = reader.state ^ status.state;
@@ -127,6 +129,4 @@ io.on("connection", (socket) => {
 
 const port = 27471
 server.listen(port);
-console.log("Server listening on port " + port);} catch (error) {
-  console.error(error);
-}
+console.log("Server listening on port " + port);
