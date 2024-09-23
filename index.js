@@ -22,6 +22,11 @@ const rl = readline.createInterface({
 
 const devTags = ["8b2a1345", "4bf41145", "00000000"];
 
+if (process.env.MODE !== "dev" && process.env.MODE !== "prod") {
+  console.error("No mode found in env. Exiting...");
+  process.exit(1);
+}
+
 function isDev(command) {
   if (process.env.MODE === "dev") {
     command;
