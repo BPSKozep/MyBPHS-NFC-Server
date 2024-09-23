@@ -1,4 +1,4 @@
-const pcsclite = require("@pokusew/pcsclite");
+try {const pcsclite = require("@pokusew/pcsclite");
 const { deferred } = require("promise-callbacks");
 const util = require("./util");
 
@@ -127,4 +127,6 @@ io.on("connection", (socket) => {
 
 const port = 27471
 server.listen(port);
-console.log("Server listening on port " + port);
+console.log("Server listening on port " + port);} catch (error) {
+  console.error(error);
+}
