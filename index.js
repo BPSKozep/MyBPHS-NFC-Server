@@ -125,4 +125,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(27471);
+const port = 27471
+server.listen(port);
+console.log("Server listening on port " + port);
