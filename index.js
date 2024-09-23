@@ -29,67 +29,73 @@ if (process.env.MODE !== "dev" && process.env.MODE !== "prod") {
 
 function isDev(command) {
   if (process.env.MODE === "dev") {
-    command;
-  } else {
-    console.log("Prod mode active");
+    console.log("Dev mode active"), command;
   }
 }
 
-isDev(
-  console.log("Dev mode active"),
+function isProd(command) {
+  if (process.env.MODE === "prod") {
+    console.log("Prod mode active");
+    command;
+  }
+}
+
+isDev(() => {
   rl.on("line", () => {
     const randomTag = devTags[Math.floor(Math.random() * devTags.length)]; // Select a random tag
     io.emit("tag", randomTag); // Emit the random tag to all connected clients
     console.log(`Sent tag: ${randomTag}`);
-  })
-);
-
-const pcsc = pcsclite();
-
-let currentReader;
-
-pcsc.on("reader", (reader) => {
-  currentReader = reader;
-  
-  console.log("Initializing...");
-
-  reader.on("status", async (status) => {
-    const changes = reader.state ^ status.state;
-
-    if (!changes) {
-      return;
-    }
-
-    if (
-      changes & reader.SCARD_STATE_PRESENT &&
-      status.state & reader.SCARD_STATE_PRESENT
-    ) {
-      const protocol = await util.connect(reader);
-
-      const getUid = deferred({ variadic: true });
-
-      reader.transmit(
-        Buffer.from([0xff, 0xca, 0x00, 0x00, 0x00]),
-        6,
-        protocol,
-        getUid.defer()
-      );
-
-      const [uidData, uidErr] = await getUid;
-
-      if (uidErr) return console.log(uidErr);
-
-      const uid = uidData.subarray(0, -2).toString("hex");
-
-      io.emit("tag", uid);
-      console.log("tag", uid);
-
-      await util.disconnect(reader);
-    }
   });
+});
 
-  reader.on("end", () => {
-    currentReader = null;
+isProd(() => {
+  const pcsc = pcsclite();
+  console.log("2");
+  let currentReader;
+
+  pcsc.on("reader", (reader) => {
+    currentReader = reader;
+
+    console.log("Initializing...");
+
+    reader.on("status", async (status) => {
+      const changes = reader.state ^ status.state;
+
+      if (!changes) {
+        return;
+      }
+
+      if (
+        changes & reader.SCARD_STATE_PRESENT &&
+        status.state & reader.SCARD_STATE_PRESENT
+      ) {
+        const protocol = await util.connect(reader);
+
+        const getUid = deferred({ variadic: true });
+
+        reader.transmit(
+          Buffer.from([0xff, 0xca, 0x00, 0x00, 0x00]),
+          6,
+          protocol,
+          getUid.defer()
+        );
+
+        const [uidData, uidErr] = await getUid;
+
+        if (uidErr) return console.log(uidErr);
+
+        const uid = uidData.subarray(0, -2).toString("hex");
+
+        io.emit("tag", uid);
+        console.log("tag", uid);
+
+        await util.disconnect(reader);
+      }
+    });
+
+    reader.on("end", () => {
+      currentReader = null;
+    });
   });
 });
 
@@ -127,6 +133,6 @@ io.on("connection", (socket) => {
   });
 });
 
-const port = 27471
+const port = 27471;
 server.listen(port);
 console.log("Server listening on port " + port);
